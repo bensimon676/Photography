@@ -82,31 +82,6 @@
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <!-- About Section -->
-    <section id="about" class="py-16 bg-gray-50">
-      <div class="max-w-3xl mx-auto px-4 text-center" data-aos="fade-up">
-        <h3 class="text-3xl font-bold mb-6">About Me</h3>
-        <p class="text-gray-600">I'm a professional photographer specializing in [type of photography]. With years of experience and a deep passion for visual storytelling, I strive to capture the emotion and essence of every moment.</p>
-      </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="py-16 bg-white">
-      <div class="max-w-3xl mx-auto px-4 text-center" data-aos="fade-up">
-        <h3 class="text-3xl font-bold mb-6">Get In Touch</h3>
-        <p class="text-gray-600 mb-4">Feel free to reach out for collaborations or inquiries.</p>
-        <p class="text-gray-800 font-medium">📧 bensimon676@gmail.com</p>
-        <div class="mt-4 space-x-4">
-          <a href="#" class="text-blue-500 hover:underline">Instagram</a>
-          <a href="#" class="text-blue-500 hover:underline">LinkedIn</a>
-        </div>
-      </div>
-    </section>
-
-    <footer class="py-6 text-center text-gray-400 text-sm bg-gray-50">
-      &copy; 2025 Ben Simon. All rights reserved.
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
     <script>
@@ -139,15 +114,17 @@
 
       function upvote(id) {
         if (voted[id]) {
-          showToast("You already voted!");
-          return;
+          const ref = db.ref('votes/' + id);
+          ref.transaction(current => (current || 1) - 1);
+          delete voted[id];
+          showToast("Vote removed 👎");
+        } else {
+          const ref = db.ref('votes/' + id);
+          ref.transaction(current => (current || 0) + 1);
+          voted[id] = true;
+          showToast("Vote counted! 👍");
         }
-        voted[id] = true;
         localStorage.setItem('voted', JSON.stringify(voted));
-
-        const ref = db.ref('votes/' + id);
-        ref.transaction(current => (current || 0) + 1);
-        showToast("Vote counted! 👍");
       }
 
       function loadVotes() {
@@ -181,12 +158,13 @@
         const gallery = document.getElementById('lightgallery');
         for (let i = 1; i <= 73; i++) {
           const id = `photo${i}`;
+          const src = `photos/${id}.jpg`;
           const div = document.createElement('div');
           div.className = 'photo-card';
           div.dataset.id = id;
           div.innerHTML = `
-            <a href="photos/${id}.jpg" data-aos="zoom-in">
-              <img src="photos/${id}.jpg" alt="${id}" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
+            <a href="${src}" data-aos="zoom-in">
+              <img src="${src}" alt="${id}" loading="lazy" class="rounded-xl shadow transition-transform duration-300 hover:scale-105">
             </a>
             <div class="mt-2 text-center">
               <button onclick="upvote('${id}')" class="text-sm text-blue-600 hover:underline">👍 Upvote</button>
