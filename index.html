@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery.min.css" />
     <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
       html { scroll-behavior: smooth; }
       .dark-mode body {
@@ -21,6 +23,25 @@
       .dark-mode .text-gray-800 { color: #f3f4f6 !important; }
       .dark-mode .text-gray-400 { color: #9ca3af !important; }
       .dark-mode .shadow { box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1); }
+      .toast {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        background-color: #10b981;
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
     </style>
   </head>
   <body class="bg-white text-gray-800 transition-colors duration-300">
@@ -50,233 +71,22 @@
     <!-- Gallery -->
     <section id="gallery" class="py-16 bg-white">
       <div class="max-w-6xl mx-auto px-4">
-        <h3 class="text-3xl font-bold text-center mb-12" data-aos="fade-up">Gallery</h3>
-        <div id="lightgallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          <a href="photos/photo1.jpeg" data-aos="zoom-in">
-            <img src="photos/photo1.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo2.jpeg" data-aos="zoom-in">
-            <img src="photos/photo2.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo3.jpeg" data-aos="zoom-in">
-            <img src="photos/photo3.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo4.jpeg" data-aos="zoom-in">
-            <img src="photos/photo4.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo5.jpeg" data-aos="zoom-in">
-            <img src="photos/photo5.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo6.jpeg" data-aos="zoom-in">
-            <img src="photos/photo6.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo7.jpeg" data-aos="zoom-in">
-            <img src="photos/photo7.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo8.jpeg" data-aos="zoom-in">
-            <img src="photos/photo8.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo9.jpeg" data-aos="zoom-in">
-            <img src="photos/photo9.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo10.jpeg" data-aos="zoom-in">
-            <img src="photos/photo10.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo11.jpeg" data-aos="zoom-in">
-            <img src="photos/photo11.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo12.jpeg" data-aos="zoom-in">
-            <img src="photos/photo12.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo13.jpeg" data-aos="zoom-in">
-            <img src="photos/photo13.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo14.jpeg" data-aos="zoom-in">
-            <img src="photos/photo14.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo15.jpeg" data-aos="zoom-in">
-            <img src="photos/photo15.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo16.jpeg" data-aos="zoom-in">
-            <img src="photos/photo16.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo17.jpeg" data-aos="zoom-in">
-            <img src="photos/photo17.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo18.jpeg" data-aos="zoom-in">
-            <img src="photos/photo18.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo19.jpeg" data-aos="zoom-in">
-            <img src="photos/photo19.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo20.jpeg" data-aos="zoom-in">
-            <img src="photos/photo20.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo21.jpeg" data-aos="zoom-in">
-            <img src="photos/photo21.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo22.jpeg" data-aos="zoom-in">
-            <img src="photos/photo22.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo23.jpeg" data-aos="zoom-in">
-            <img src="photos/photo23.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo24.jpeg" data-aos="zoom-in">
-            <img src="photos/photo24.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo25.jpeg" data-aos="zoom-in">
-            <img src="photos/photo25.jpeg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo26.jpg" data-aos="zoom-in">
-            <img src="photos/photo26.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo27.jpg" data-aos="zoom-in">
-            <img src="photos/photo27.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo28.jpg" data-aos="zoom-in">
-            <img src="photos/photo28.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo29.jpg" data-aos="zoom-in">
-            <img src="photos/photo29.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo30.jpg" data-aos="zoom-in">
-            <img src="photos/photo30.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo31.jpg" data-aos="zoom-in">
-            <img src="photos/photo31.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo32.jpg" data-aos="zoom-in">
-            <img src="photos/photo32.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo33.jpg" data-aos="zoom-in">
-            <img src="photos/photo33.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo34.jpg" data-aos="zoom-in">
-            <img src="photos/photo34.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo35.jpg" data-aos="zoom-in">
-            <img src="photos/photo35.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo36.jpg" data-aos="zoom-in">
-            <img src="photos/photo36.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo37.jpg" data-aos="zoom-in">
-            <img src="photos/photo37.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo38.jpg" data-aos="zoom-in">
-            <img src="photos/photo38.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo39.jpg" data-aos="zoom-in">
-            <img src="photos/photo39.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo40.jpg" data-aos="zoom-in">
-            <img src="photos/photo40.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo41.jpg" data-aos="zoom-in">
-            <img src="photos/photo41.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo42.jpg" data-aos="zoom-in">
-            <img src="photos/photo42.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo43.jpg" data-aos="zoom-in">
-            <img src="photos/photo43.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo44.jpg" data-aos="zoom-in">
-            <img src="photos/photo44.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo45.jpg" data-aos="zoom-in">
-            <img src="photos/photo45.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo46.jpg" data-aos="zoom-in">
-            <img src="photos/photo46.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo47.jpg" data-aos="zoom-in">
-            <img src="photos/photo47.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo48.jpg" data-aos="zoom-in">
-            <img src="photos/photo48.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo49.jpg" data-aos="zoom-in">
-            <img src="photos/photo49.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo51.jpg" data-aos="zoom-in">
-            <img src="photos/photo51.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo52.jpg" data-aos="zoom-in">
-            <img src="photos/photo52.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo53.jpg" data-aos="zoom-in">
-            <img src="photos/photo53.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo54.jpg" data-aos="zoom-in">
-            <img src="photos/photo54.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo55.png" data-aos="zoom-in">
-            <img src="photos/photo55.png" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo56.jpg" data-aos="zoom-in">
-            <img src="photos/photo56.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo57.jpg" data-aos="zoom-in">
-            <img src="photos/photo57.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo58.jpg" data-aos="zoom-in">
-            <img src="photos/photo58.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo59.jpg" data-aos="zoom-in">
-            <img src="photos/photo59.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo60.jpg" data-aos="zoom-in">
-            <img src="photos/photo60.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo61.jpg" data-aos="zoom-in">
-            <img src="photos/photo61.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo62.jpg" data-aos="zoom-in">
-            <img src="photos/photo62.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo63.jpg" data-aos="zoom-in">
-            <img src="photos/photo63.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo64.jpg" data-aos="zoom-in">
-            <img src="photos/photo64.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo65.jpg" data-aos="zoom-in">
-            <img src="photos/photo65.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo66.jpg" data-aos="zoom-in">
-            <img src="photos/photo66.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo67.jpg" data-aos="zoom-in">
-            <img src="photos/photo67.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo68.jpg" data-aos="zoom-in">
-            <img src="photos/photo68.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo69.jpg" data-aos="zoom-in">
-            <img src="photos/photo69.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo70.jpg" data-aos="zoom-in">
-            <img src="photos/photo70.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo71.jpg" data-aos="zoom-in">
-            <img src="photos/photo71.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo72.jpg" data-aos="zoom-in">
-            <img src="photos/photo72.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          <a href="photos/photo73.jpg" data-aos="zoom-in">
-            <img src="photos/photo73.jpg" alt="" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
-          </a>
-          </div>
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-3xl font-bold" data-aos="fade-up">Gallery</h3>
+          <button onclick="toggleSort()" class="text-sm text-white bg-gray-800 px-4 py-1 rounded hover:bg-gray-700">Sort by Upvotes</button>
+        </div>
+        <div id="lightgallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
       </div>
     </section>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
 
     <!-- About Section -->
     <section id="about" class="py-16 bg-gray-50">
       <div class="max-w-3xl mx-auto px-4 text-center" data-aos="fade-up">
         <h3 class="text-3xl font-bold mb-6">About Me</h3>
-        <p class="text-gray-600">Hello! My name is Ben Simon. Enjoy my photos!</p>
+        <p class="text-gray-600">I'm a professional photographer specializing in [type of photography]. With years of experience and a deep passion for visual storytelling, I strive to capture the emotion and essence of every moment.</p>
       </div>
     </section>
 
@@ -284,8 +94,11 @@
     <section id="contact" class="py-16 bg-white">
       <div class="max-w-3xl mx-auto px-4 text-center" data-aos="fade-up">
         <h3 class="text-3xl font-bold mb-6">Get In Touch</h3>
-        <p class="text-gray-600 mb-4">Email me and tell me I did a good job</p>
+        <p class="text-gray-600 mb-4">Feel free to reach out for collaborations or inquiries.</p>
         <p class="text-gray-800 font-medium">📧 bensimon676@gmail.com</p>
+        <div class="mt-4 space-x-4">
+          <a href="#" class="text-blue-500 hover:underline">Instagram</a>
+          <a href="#" class="text-blue-500 hover:underline">LinkedIn</a>
         </div>
       </div>
     </section>
@@ -297,15 +110,96 @@
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
     <script>
-      lightGallery(document.getElementById('lightgallery'));
-      AOS.init({
-        once: true,
-        duration: 800
-      });
+      AOS.init({ once: true, duration: 800 });
 
       function toggleDarkMode() {
         document.documentElement.classList.toggle('dark-mode');
       }
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1mlveNSV--XCoa2SAG9gULdSHlxrtWtE",
+        authDomain: "ben-simon-portfolio-74838.firebaseapp.com",
+        databaseURL: "https://ben-simon-portfolio-74838-default-rtdb.firebaseio.com",
+        projectId: "ben-simon-portfolio-74838",
+        storageBucket: "ben-simon-portfolio-74838.firebasestorage.app",
+        messagingSenderId: "806287489115",
+        appId: "1:806287489115:web:46829fcd78e6997c8c277e"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const voted = JSON.parse(localStorage.getItem('voted') || '{}');
+
+      function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
+
+      function upvote(id) {
+        if (voted[id]) {
+          showToast("You already voted!");
+          return;
+        }
+        voted[id] = true;
+        localStorage.setItem('voted', JSON.stringify(voted));
+
+        const ref = db.ref('votes/' + id);
+        ref.transaction(current => (current || 0) + 1);
+        showToast("Vote counted! 👍");
+      }
+
+      function loadVotes() {
+        db.ref('votes').on('value', snapshot => {
+          const votes = snapshot.val() || {};
+          for (const id in votes) {
+            const el = document.getElementById(`count-${id}`);
+            if (el) el.textContent = votes[id];
+          }
+        });
+      }
+
+      function toggleSort() {
+        db.ref('votes').once('value').then(snapshot => {
+          const voteData = snapshot.val() || {};
+          const gallery = document.getElementById('lightgallery');
+          const cards = Array.from(gallery.querySelectorAll('.photo-card'));
+
+          const sorted = cards.sort((a, b) => {
+            const aVotes = voteData[a.dataset.id] || 0;
+            const bVotes = voteData[b.dataset.id] || 0;
+            return bVotes - aVotes;
+          });
+
+          gallery.innerHTML = '';
+          sorted.forEach(card => gallery.appendChild(card));
+        });
+      }
+
+      function generateGallery() {
+        const gallery = document.getElementById('lightgallery');
+        for (let i = 1; i <= 73; i++) {
+          const id = `photo${i}`;
+          const div = document.createElement('div');
+          div.className = 'photo-card';
+          div.dataset.id = id;
+          div.innerHTML = `
+            <a href="photos/${id}.jpg" data-aos="zoom-in">
+              <img src="photos/${id}.jpg" alt="${id}" class="rounded-xl shadow hover:scale-105 transition duration-300" loading="lazy">
+            </a>
+            <div class="mt-2 text-center">
+              <button onclick="upvote('${id}')" class="text-sm text-blue-600 hover:underline">👍 Upvote</button>
+              <p class="text-xs text-gray-500">Likes: <span id="count-${id}">0</span></p>
+            </div>
+          `;
+          gallery.appendChild(div);
+        }
+        lightGallery(gallery);
+      }
+
+      generateGallery();
+      loadVotes();
     </script>
   </body>
 </html>
