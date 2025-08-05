@@ -1,197 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Professional photography portfolio of Ben Simon" />
-    <title>Ben Simon Photography</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery.min.css" />
-    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <style>
-      html { scroll-behavior: smooth; }
-      .dark-mode body {
-        background-color: #111827;
-        color: #f3f4f6;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ben Simon Photography Portfolio</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.0/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- AOS Animations -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Firebase -->
+  <script type="module" defer>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, runTransaction, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyD1mlveNSV--XCoa2SAG9gULdSHlxrtWtE",
+      authDomain: "ben-simon-portfolio-74838.firebaseapp.com",
+      databaseURL: "https://ben-simon-portfolio-74838-default-rtdb.firebaseio.com",
+      projectId: "ben-simon-portfolio-74838",
+      storageBucket: "ben-simon-portfolio-74838.firebasestorage.app",
+      messagingSenderId: "806287489115",
+      appId: "1:806287489115:web:46829fcd78e6997c8c277e"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Generate or load permanent local user ID
+    let userId = localStorage.getItem('bs_userId');
+    if (!userId) { userId = 'uid_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); localStorage.setItem('bs_userId', userId); }
+
+    // Track votes by this user
+    let userVotes = {};
+
+    async function loadUserVotes() {
+      const snapshot = await get(ref(db, 'userVotes/' + userId));
+      userVotes = snapshot.val() || {};
+    }
+
+    function toggleVote(id) {
+      const voteCountRef = ref(db, 'votes/' + id);
+      const userVoteRef = ref(db, 'userVotes/' + userId + '/' + id);
+      if (userVotes[id]) {
+        // remove vote
+        remove(userVoteRef);
+        runTransaction(voteCountRef, curr => (curr || 1) - 1);
+        delete userVotes[id];
+      } else {
+        set(userVoteRef, true);
+        runTransaction(voteCountRef, curr => (curr || 0) + 1);
+        userVotes[id] = true;
       }
-      .dark-mode .bg-white { background-color: #1f2937 !important; }
-      .dark-mode .bg-gray-100 { background-color: #111827 !important; }
-      .dark-mode .bg-gray-50 { background-color: #1f2937 !important; }
-      .dark-mode .text-gray-600 { color: #d1d5db !important; }
-      .dark-mode .text-gray-800 { color: #f3f4f6 !important; }
-      .dark-mode .text-gray-400 { color: #9ca3af !important; }
-      .dark-mode .shadow { box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1); }
-      .toast {
-        position: fixed;
-        bottom: 1rem;
-        right: 1rem;
-        background-color: #10b981;
-        color: white;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        z-index: 9999;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
-      }
-      .toast.show {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    </style>
-  </head>
-  <body class="bg-white text-gray-800 transition-colors duration-300">
-    <!-- Navbar -->
-    <header class="sticky top-0 bg-white border-b z-50">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Ben Simon</h1>
-        <nav class="space-x-6 text-sm">
-          <a href="#home" class="hover:underline">Home</a>
-          <a href="#gallery" class="hover:underline">Gallery</a>
-          <a href="#about" class="hover:underline">About</a>
-          <a href="#contact" class="hover:underline">Contact</a>
-          <button onclick="toggleDarkMode()" class="ml-4 text-xs bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">Toggle Dark Mode</button>
-        </nav>
-      </div>
-    </header>
+      updateButtons();
+    }
 
-    <!-- Hero Section -->
-    <section id="home" class="h-screen bg-gray-100 flex items-center justify-center">
-      <div class="text-center px-4" data-aos="fade-up">
-        <h2 class="text-4xl font-extrabold mb-4">Capturing the Moment</h2>
-        <p class="text-lg text-gray-600 mb-6">Discover the world through my lens.</p>
-        <a href="#gallery" class="bg-black text-white px-6 py-2 rounded-full text-sm">View Gallery</a>
-      </div>
-    </section>
+    function updateButtons() {
+      document.querySelectorAll('.vote-btn').forEach(btn => {
+        const id = btn.dataset.id;
+        btn.textContent = (userVotes[id] ? '↩️ Remove Upvote' : '👍 Upvote');
+      });
+    }
 
-    <!-- Gallery -->
-    <section id="gallery" class="py-16 bg-white">
-      <div class="max-w-6xl mx-auto px-4">
-        <div class="flex justify-between items-center mb-6">
-          <h3 class="text-3xl font-bold" data-aos="fade-up">Gallery</h3>
-          <button onclick="toggleSort()" id="sort-toggle" class="text-sm text-white bg-gray-800 px-4 py-1 rounded hover:bg-gray-700">Sort by Upvotes</button>
-        </div>
-        <div id="lightgallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
-      </div>
-    </section>
-
-    <!-- Toast -->
-    <div id="toast" class="toast"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.min.js"></script>
-    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-    <script>
-      AOS.init({ once: true, duration: 800 });
-      function toggleDarkMode() {
-        document.documentElement.classList.toggle('dark-mode');
-      }
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyD1mlveNSV--XCoa2SAG9gULdSHlxrtWtE",
-        authDomain: "ben-simon-portfolio-74838.firebaseapp.com",
-        databaseURL: "https://ben-simon-portfolio-74838-default-rtdb.firebaseio.com",
-        projectId: "ben-simon-portfolio-74838",
-        storageBucket: "ben-simon-portfolio-74838.firebasestorage.app",
-        messagingSenderId: "806287489115",
-        appId: "1:806287489115:web:46829fcd78e6997c8c277e"
-      };
-
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.database();
-      const voted = JSON.parse(localStorage.getItem('voted') || '{}');
-      let sortByVotes = true;
-
-      function showToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
-      }
-
-      function upvote(id) {
-        const ref = db.ref('votes/' + id);
-        const btn = document.getElementById(`btn-${id}`);
-
-        if (voted[id]) {
-          ref.transaction(current => Math.max(0, (current || 1) - 1));
-          delete voted[id];
-          btn.textContent = '👍 Upvote';
-          showToast("Vote removed 👎");
-        } else {
-          ref.transaction(current => (current || 0) + 1);
-          voted[id] = true;
-          btn.textContent = '↩️ Remove Upvote';
-          showToast("Vote counted! 👍");
-        }
-        localStorage.setItem('voted', JSON.stringify(voted));
-      }
-
-      function loadVotes() {
-        db.ref('votes').on('value', snapshot => {
-          const votes = snapshot.val() || {};
-          for (const id in votes) {
-            const el = document.getElementById(`count-${id}`);
-            if (el) el.textContent = votes[id];
-          }
-        });
-      }
-
-      function toggleSort() {
-        sortByVotes = !sortByVotes;
-        document.getElementById('sort-toggle').textContent = sortByVotes ? 'Sort by Upvotes' : 'Sort by Name';
-        db.ref('votes').once('value').then(snapshot => {
-          const voteData = snapshot.val() || {};
-          const gallery = document.getElementById('lightgallery');
-          const cards = Array.from(gallery.querySelectorAll('.photo-card'));
-
-          const sorted = cards.sort((a, b) => {
-            if (sortByVotes) {
-              const aVotes = voteData[a.dataset.id] || 0;
-              const bVotes = voteData[b.dataset.id] || 0;
-              return bVotes - aVotes;
-            } else {
-              return a.dataset.id.localeCompare(b.dataset.id);
-            }
-          });
-
-          gallery.innerHTML = '';
-          sorted.forEach(card => gallery.appendChild(card));
-        });
-      }
-
-      function generateGallery() {
-        const gallery = document.getElementById('lightgallery');
+    function loadVotesAndRenderGallery(sortType = 'name') {
+      onValue(ref(db, 'votes'), snapshot => {
+        const voteData = snapshot.val() || {};
+        const items = [];
         for (let i = 1; i <= 73; i++) {
-          const id = `photo${i}`;
-          const extensions = ['jpg', 'jpeg'];
-          extensions.forEach(ext => {
-            const src = `photos/${id}.${ext}`;
-            const div = document.createElement('div');
-            div.className = 'photo-card';
-            div.dataset.id = id;
-            div.innerHTML = `
-              <a href="${src}" data-aos="zoom-in">
-                <img src="${src}" alt="${id}" loading="lazy" class="rounded-xl shadow transition-transform duration-300 hover:scale-105">
-              </a>
-              <div class="mt-2 text-center">
-                <button id="btn-${id}" onclick="upvote('${id}')" class="text-sm text-blue-600 hover:underline">
-                  ${voted[id] ? '↩️ Remove Upvote' : '👍 Upvote'}
-                </button>
-                <p class="text-xs text-gray-500">Likes: <span id="count-${id}">0</span></p>
-              </div>
-            `;
-            gallery.appendChild(div);
+          items.push({
+            id: 'photo' + i,
+            votes: voteData['photo' + i] || 0
           });
         }
-        lightGallery(gallery);
+        let sorted = [...items];
+        if (sortType === 'votes') {
+          sorted.sort((a,b) => b.votes - a.votes);
+        }
+        buildGallery(sorted);
+      });
+    }
+
+    async function buildGallery(items) {
+      await loadUserVotes();
+      const gallery = document.getElementById('lightgallery');
+      gallery.innerHTML = '';
+      const dynamicEl = [];
+
+      for (const item of items) {
+        const id = item.id, num = id.replace('photo','');
+        const photoUrl = await resolvePhotoUrl(num);
+        if (!photoUrl) continue;
+        const a = document.createElement('a');
+        a.href = photoUrl;
+        a.className = 'photo-card';
+        a.setAttribute('data-id', id);
+        a.setAttribute('data-sub-html', `<p>Votes: <span id="count-${id}">${item.votes}</span></p>`);
+        a.dataset.lgSize = "1600-2400";
+        const img = document.createElement('img');
+        img.src = photoUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.className = 'rounded-xl shadow hover:scale-105 transition duration-300';
+        a.appendChild(img);
+        const btn = document.createElement('button');
+        btn.className = 'vote-btn mt-2 bg-blue-500 text-white px-3 py-1 rounded';
+        btn.dataset.id = id;
+        btn.onclick = () => toggleVote(id);
+        a.parentNode; // doc
+        gallery.appendChild(a);
+        gallery.appendChild(btn);
+        dynamicEl.push({ src: photoUrl, thumb: photoUrl, subHtml: `<p>${item.votes} votes</p>` });
       }
 
-      generateGallery();
-      loadVotes();
-    </script>
-  </body>
+      // initialize lightGallery
+      if (window.lg) window.lg.destroy(true);
+      window.lg = lightGallery(gallery, { dynamic: true, dynamicEl });
+
+      updateButtons();
+    }
+
+    function resolvePhotoUrl(n) {
+      return new Promise(resolve => {
+        const base = `photos/photo${n}`;
+        const tryExt = ['.jpg','.jpeg'];
+        function attempt(i) {
+          if (i >= tryExt.length) return resolve(null);
+          const url = base + tryExt[i];
+          const img = new Image();
+          img.onload = () => resolve(url);
+          img.onerror = () => attempt(i + 1);
+          img.src = url;
+        }
+        attempt(0);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadVotesAndRenderGallery('name');
+      document.getElementById('sort-toggle').onclick = () => {
+        const curr = document.getElementById('sort-toggle').dataset.sort;
+        const next = curr === 'name' ? 'votes' : 'name';
+        document.getElementById('sort-toggle').dataset.sort = next;
+        document.getElementById('sort-toggle').textContent = (next === 'name' ? 'Sort by Upvotes' : 'Sort by Filename');
+        loadVotesAndRenderGallery(next);
+      };
+    });
+  </script>
+
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/css/lightgallery.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/lightgallery.min.js"></script>
+</head>
+
+<body class="bg-white text-gray-900">
+  <nav class="p-4 flex justify-between">
+    <h1 class="text-2xl font-bold">Ben Simon Photography</h1>
+    <button id="sort-toggle" data-sort="name" class="px-4 py-2 bg-green-500 text-white rounded">Sort by Upvotes</button>
+  </nav>
+
+  <section id="lightgallery" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4"></section>
+
+  <script>
+    AOS.init({ once: true });
+  </script>
+</body>
 </html>
