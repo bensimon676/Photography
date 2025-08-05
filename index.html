@@ -1,18 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ben Simon Photography Portfolio</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.0/dist/tailwind.min.css" rel="stylesheet">
 
-  <!-- AOS Animations -->
+  <!-- LightGallery CSS + Plugins -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/css/lightgallery.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/css/lg-zoom.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/css/lg-thumbnail.min.css" />
+
+  <!-- AOS (Animate On Scroll) -->
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-  <!-- Firebase -->
-  <script type="module" defer>
+  <style>
+    .dark body { background: #111; color: #eee; }
+    .vote-btn.removed { background: #999 !important; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100">
+
+  <nav class="p-4 flex justify-between items-center bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
+    <h1 class="text-2xl font-bold">Ben Simon Photography</h1>
+    <div class="space-x-2">
+      <button id="theme-toggle" class="px-3 py-1 bg-yellow-400 text-black rounded">Toggle Dark Mode</button>
+      <button id="sort-toggle" data-sort="name" class="px-3 py-1 bg-green-500 text-white rounded">Sort by Upvotes</button>
+    </div>
+  </nav>
+
+  <section id="lightgallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+    <!-- Gallery items injected via script -->
+  </section>
+
+  <!-- Firebase + App Logic -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, runTransaction, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getDatabase, ref, runTransaction, onValue, get, set, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyD1mlveNSV--XCoa2SAG9gULdSHlxrtWtE",
       authDomain: "ben-simon-portfolio-74838.firebaseapp.com",
@@ -25,29 +50,28 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Generate or load permanent local user ID
     let userId = localStorage.getItem('bs_userId');
-    if (!userId) { userId = 'uid_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); localStorage.setItem('bs_userId', userId); }
-
-    // Track votes by this user
+    if (!userId) {
+      userId = 'uid_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+      localStorage.setItem('bs_userId', userId);
+    }
     let userVotes = {};
 
     async function loadUserVotes() {
-      const snapshot = await get(ref(db, 'userVotes/' + userId));
-      userVotes = snapshot.val() || {};
+      const snap = await get(ref(db, `userVotes/${userId}`));
+      userVotes = snap.val() || {};
     }
 
     function toggleVote(id) {
-      const voteCountRef = ref(db, 'votes/' + id);
-      const userVoteRef = ref(db, 'userVotes/' + userId + '/' + id);
+      const uRef = ref(db, `userVotes/${userId}/${id}`);
+      const vRef = ref(db, `votes/${id}`);
       if (userVotes[id]) {
-        // remove vote
-        remove(userVoteRef);
-        runTransaction(voteCountRef, curr => (curr || 1) - 1);
+        remove(uRef);
+        runTransaction(vRef, curr => (curr || 1) - 1);
         delete userVotes[id];
       } else {
-        set(userVoteRef, true);
-        runTransaction(voteCountRef, curr => (curr || 0) + 1);
+        set(uRef, true);
+        runTransaction(vRef, curr => (curr || 0) + 1);
         userVotes[id] = true;
       }
       updateButtons();
@@ -56,110 +80,90 @@
     function updateButtons() {
       document.querySelectorAll('.vote-btn').forEach(btn => {
         const id = btn.dataset.id;
-        btn.textContent = (userVotes[id] ? '↩️ Remove Upvote' : '👍 Upvote');
+        btn.textContent = userVotes[id] ? '↩️ Remove Upvote' : '👍 Upvote';
+        btn.classList.toggle('removed', !userVotes[id]);
       });
     }
 
-    function loadVotesAndRenderGallery(sortType = 'name') {
-      onValue(ref(db, 'votes'), snapshot => {
-        const voteData = snapshot.val() || {};
-        const items = [];
-        for (let i = 1; i <= 73; i++) {
-          items.push({
-            id: 'photo' + i,
-            votes: voteData['photo' + i] || 0
-          });
-        }
-        let sorted = [...items];
-        if (sortType === 'votes') {
-          sorted.sort((a,b) => b.votes - a.votes);
-        }
-        buildGallery(sorted);
+    function resolvePhotoUrl(num) {
+      return new Promise(res => {
+        const base = `photos/photo${num}`;
+        const exts = ['.jpg', '.jpeg'];
+        (i => {
+          if (i >= exts.length) return res(null);
+          const img = new Image();
+          img.src = base + exts[i];
+          img.onload = () => res(base + exts[i]);
+          img.onerror = () => arguments.callee(i+1);
+        })(0);
       });
     }
 
-    async function buildGallery(items) {
-      await loadUserVotes();
-      const gallery = document.getElementById('lightgallery');
-      gallery.innerHTML = '';
+    function buildGallery(items) {
+      const el = document.getElementById('lightgallery');
+      el.innerHTML = '';
       const dynamicEl = [];
-
-      for (const item of items) {
-        const id = item.id, num = id.replace('photo','');
-        const photoUrl = await resolvePhotoUrl(num);
-        if (!photoUrl) continue;
-        const a = document.createElement('a');
-        a.href = photoUrl;
-        a.className = 'photo-card';
-        a.setAttribute('data-id', id);
-        a.setAttribute('data-sub-html', `<p>Votes: <span id="count-${id}">${item.votes}</span></p>`);
-        a.dataset.lgSize = "1600-2400";
-        const img = document.createElement('img');
-        img.src = photoUrl;
-        img.alt = '';
-        img.loading = 'lazy';
-        img.className = 'rounded-xl shadow hover:scale-105 transition duration-300';
-        a.appendChild(img);
-        const btn = document.createElement('button');
-        btn.className = 'vote-btn mt-2 bg-blue-500 text-white px-3 py-1 rounded';
-        btn.dataset.id = id;
-        btn.onclick = () => toggleVote(id);
-        a.parentNode; // doc
-        gallery.appendChild(a);
-        gallery.appendChild(btn);
-        dynamicEl.push({ src: photoUrl, thumb: photoUrl, subHtml: `<p>${item.votes} votes</p>` });
-      }
-
-      // initialize lightGallery
+      items.forEach(item => {
+        const {id,votes} = item;
+        const num = id.replace('photo','');
+        dynamicEl.push({ src: `photos/${id}.jpg`, thumb: `photos/${id}.jpg`, subHtml: `<p>${votes} votes</p>` });
+        resolvePhotoUrl(num).then(url => {
+          if (!url) return;
+          const link = document.createElement('a');
+          link.href = url;
+          link.className = 'photo-card block cursor-pointer';
+          link.setAttribute('data-id', id);
+          link.setAttribute('data-sub-html', `<p>Votes: <span id="count-${id}">${votes}</span></p>`);
+          const img = document.createElement('img');
+          img.loading = 'lazy';
+          img.className = 'rounded-xl shadow hover:scale-105 transition';
+          img.src = url;
+          link.appendChild(img);
+          const btn = document.createElement('button');
+          btn.className = 'vote-btn mt-1 px-3 py-1 bg-blue-500 text-white rounded';
+          btn.dataset.id = id;
+          btn.onclick = () => toggleVote(id);
+          el.appendChild(link);
+          el.appendChild(btn);
+        });
+      });
       if (window.lg) window.lg.destroy(true);
-      window.lg = lightGallery(gallery, { dynamic: true, dynamicEl });
-
+      window.lg = lightGallery(el, { dynamic: true, dynamicEl });
       updateButtons();
     }
 
-    function resolvePhotoUrl(n) {
-      return new Promise(resolve => {
-        const base = `photos/photo${n}`;
-        const tryExt = ['.jpg','.jpeg'];
-        function attempt(i) {
-          if (i >= tryExt.length) return resolve(null);
-          const url = base + tryExt[i];
-          const img = new Image();
-          img.onload = () => resolve(url);
-          img.onerror = () => attempt(i + 1);
-          img.src = url;
-        }
-        attempt(0);
+    function loadAndRender(sortType='name') {
+      loadUserVotes().then(() => {
+        onValue(ref(db, 'votes'), snap => {
+          const votes = snap.val() || {};
+          const arr = Array.from({ length: 73 }, (_, i) => ({ id:`photo${i+1}`, votes: votes[`photo${i+1}`] || 0 }));
+          if (sortType === 'votes') arr.sort((a,b) => b.votes - a.votes);
+          buildGallery(arr);
+        });
       });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      loadVotesAndRenderGallery('name');
+      loadAndRender();
       document.getElementById('sort-toggle').onclick = () => {
-        const curr = document.getElementById('sort-toggle').dataset.sort;
-        const next = curr === 'name' ? 'votes' : 'name';
+        const next = document.getElementById('sort-toggle').dataset.sort === 'name' ? 'votes' : 'name';
         document.getElementById('sort-toggle').dataset.sort = next;
-        document.getElementById('sort-toggle').textContent = (next === 'name' ? 'Sort by Upvotes' : 'Sort by Filename');
-        loadVotesAndRenderGallery(next);
+        document.getElementById('sort-toggle').textContent = next === 'name' ? 'Sort by Upvotes' : 'Sort by Filename';
+        loadAndRender(next);
       };
+      document.getElementById('theme-toggle').onclick = () => {
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('bs_theme', document.documentElement.classList.contains('dark')?'dark':'light');
+      };
+      if (localStorage.getItem('bs_theme') === 'light') document.documentElement.classList.remove('dark');
     });
   </script>
 
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/css/lightgallery.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/lightgallery.min.js"></script>
-</head>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/lightgallery.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/plugins/zoom/lg-zoom.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery-js/2.7.1/plugins/thumbnail/lg-thumbnail.min.js" defer></script>
 
-<body class="bg-white text-gray-900">
-  <nav class="p-4 flex justify-between">
-    <h1 class="text-2xl font-bold">Ben Simon Photography</h1>
-    <button id="sort-toggle" data-sort="name" class="px-4 py-2 bg-green-500 text-white rounded">Sort by Upvotes</button>
-  </nav>
-
-  <section id="lightgallery" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4"></section>
-
-  <script>
-    AOS.init({ once: true });
-  </script>
+  <script>document.addEventListener('DOMContentLoaded', () => AOS.init({ once: true }));</script>
 </body>
 </html>
