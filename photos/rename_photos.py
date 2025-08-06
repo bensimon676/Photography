@@ -1,16 +1,14 @@
+# rename_jpg_to_jpeg.py
 import os
 
-def rename_jpg_to_jpeg(directory='.'):
+def rename_jpg_to_jpeg(directory="photos"):
     for filename in os.listdir(directory):
-        # Check if it's a file and ends with .jpg (case-insensitive)
-        if os.path.isfile(os.path.join(directory, filename)) and filename.lower().endswith('.jpeg'):
+        if filename.lower().endswith(".jpg"):
             base = os.path.splitext(filename)[0]
-            new_name = base + '.jpg'
-            old_file = os.path.join(directory, filename)
-            new_file = os.path.join(directory, new_name)
-            os.rename(old_file, new_file)
-            print(f'Renamed: {filename} -> {new_name}')
+            old_path = os.path.join(directory, filename)
+            new_path = os.path.join(directory, base + ".jpeg")
+            os.rename(old_path, new_path)
+            print(f"Renamed: {filename} → {base}.jpeg")
 
 if __name__ == "__main__":
     rename_jpg_to_jpeg()
-
